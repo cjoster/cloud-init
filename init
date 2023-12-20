@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+[ -z "${DEBUG+x}" ] || { >&2 echo "+ DEBUG environment variable set. Enabling debuging output."; set -x; }
+
+function log() {
+	>&2 echo "${@:-}"
+}
+
+function die() {
+	log "${@:-Unknown Fatal Error}"
+	exit 1
+}
+
+function cleanup() {
+	local ret="${?}"
+	[ -z "${TMPDIR:-}" ] || [ ! -d "${TMPDIR}" ] || rm -rf "${TMPDIR}"
+	unset TMPDIR
+
+	while popd > /dev/null 2>&1; do
+		:
+	done
+
+	[ "${ret}" == "0" ] || log "*** WARNING * WARNING * WARNING *** Script did not complete successfully. *** WARNING * WARNING * WARNING ***"
+}
+trap cleanup EXIT
